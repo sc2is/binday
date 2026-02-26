@@ -214,6 +214,7 @@
     .next-card.black-bin { background: var(--bin-black); }
     .next-card.blue-bin  { background: var(--bin-blue); }
     .next-card.green-bin { background: var(--bin-green); }
+    .next-card.food-bin  { background: #6b2d8b; }
 
     .next-card-icon { font-size: 1.3rem; margin-bottom: 0.3rem; }
     .next-card-name { font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
@@ -305,6 +306,7 @@
     .bin-pill.black { background: var(--bin-black); }
     .bin-pill.blue  { background: var(--bin-blue); }
     .bin-pill.green { background: var(--bin-green); }
+    .bin-pill.food  { background: #6b2d8b; }
     .bin-pill-dot   { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); }
 
     .col-today-tag {
@@ -431,7 +433,7 @@
 
   <div class="footer">
     Data from West Berkshire Council · <a href="https://www.westberks.gov.uk/binday" target="_blank">westberks.gov.uk</a><br>
-    Black bin: every 3 weeks · Blue &amp; Green: fortnightly
+    Black: 3-weekly · Recycling &amp; Garden: fortnightly · Food: weekly
   </div>
 </div>
 
@@ -478,77 +480,67 @@
   }
 
   // ── SCHEDULE GENERATION (local fallback) ──
-  // West Berkshire council API has CORS restrictions, so we calculate locally
-  // based on the known schedule pattern from September 2025 onwards.
-  // Blue/Green are fortnightly, Black is 3-weekly.
-  // Anchor dates determined from the council's published schedule for this area.
+  // Anchors confirmed from West Berkshire council site for RG20 7BH
+  // Collection day: TUESDAY
+  // Recycling (blue+green): fortnightly — anchor Tue 3 Mar 2026
+  // Black (rubbish):        3-weekly    — anchor Tue 10 Mar 2026
+  // Food waste:             weekly every Tuesday
 
-  // For RG20 area: collection day is typically MONDAY
-  // Blue/Green fortnightly anchor: 2025-09-08 (Monday)
-  // Black 3-weekly anchor:         2025-09-08 (Monday)
-  // (These are approximate — user should verify against their council letter)
-
-  const COLLECTION_DAY = 1; // Monday (0=Sun, 1=Mon)
-  const ANCHOR = new Date('2025-09-08'); // Known collection date anchor
+  const ANCHOR_BLUE  = new Date('2026-03-03'); // Tue — recycling + garden fortnightly
+  const ANCHOR_BLACK = new Date('2026-03-10'); // Tue — black bin 3-weekly
 
   function getCollectionsForRange(weeksAhead = 26) {
     const today = new Date();
     today.setHours(0,0,0,0);
 
-    // Find the first Monday on or before anchor
-    const anchor = new Date(ANCHOR);
-
-    const collections = [];
     const endDate = new Date(today);
     endDate.setDate(endDate.getDate() + weeksAhead * 7);
 
-    // Start from anchor, step week by week
-    let d = new Date(anchor);
-    // Walk back to within range if anchor is in past
-    while (d < today) {
-      d.setDate(d.getDate() + 7);
-    }
-    // Go back one full cycle (3 weeks) so we catch the last ones
-    let startSearch = new Date(anchor);
-
-    // Reset to anchor, then walk forward
-    d = new Date(anchor);
-
     const result = {};
 
+    const addBin = (date, bin) => {
+      const d2 = new Date(date);
+      d2.setHours(0,0,0,0);
+      if (d2 < today) return;
+      const key = d2.toISOString().split('T')[0];
+      if (!result[key]) result[key] = [];
+      if (!result[key].includes(bin)) result[key].push(bin);
+    };
+
+    // Blue + Green: every 2 weeks from anchor
+    let d = new Date(ANCHOR_BLUE);
+    while (d > today) d.setDate(d.getDate() - 14);
     while (d <= endDate) {
-      const dStr = d.toISOString().split('T')[0];
-      const daysSinceAnchor = Math.round((d - anchor) / (1000*60*60*24));
-      const weeksSince = daysSinceAnchor / 7;
+      addBin(new Date(d), 'blue');
+      addBin(new Date(d), 'green');
+      d.setDate(d.getDate() + 14);
+    }
 
-      const bins = [];
-
-      // Blue & Green: every 2 weeks from anchor
-      if (weeksSince >= 0 && weeksSince % 2 === 0) {
-        bins.push('blue');
-        bins.push('green');
-      }
-
-      // Black: every 3 weeks from anchor
-      if (weeksSince >= 0 && weeksSince % 3 === 0) {
-        bins.push('black');
-      }
-
-      if (bins.length > 0) {
-        result[dStr] = bins;
-      }
-
+    // Food waste: every week
+    d = new Date(ANCHOR_BLUE);
+    while (d > today) d.setDate(d.getDate() - 7);
+    while (d <= endDate) {
+      addBin(new Date(d), 'food');
       d.setDate(d.getDate() + 7);
+    }
+
+    // Black: every 3 weeks from anchor
+    d = new Date(ANCHOR_BLACK);
+    while (d > today) d.setDate(d.getDate() - 21);
+    while (d <= endDate) {
+      addBin(new Date(d), 'black');
+      d.setDate(d.getDate() + 21);
     }
 
     return result;
   }
 
-  // ── RENDER ──
+    // ── RENDER ──
   const BIN_META = {
     black: { label: 'Black',    emoji: '🗑️', cls: 'black' },
     blue:  { label: 'Recycling', emoji: '♻️', cls: 'blue'  },
     green: { label: 'Garden',   emoji: '🌿', cls: 'green' },
+    food:  { label: 'Food',     emoji: '🥕', cls: 'food'  },
   };
 
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -567,18 +559,18 @@
     const sorted = Object.keys(collections).sort();
 
     // ── NEXT UP CARDS ──
-    const nextForBin = { black: null, blue: null, green: null };
+    const nextForBin = { black: null, blue: null, green: null, food: null };
     for (const dateStr of sorted) {
       const d = new Date(dateStr);
       for (const bin of collections[dateStr]) {
         if (!nextForBin[bin] && d >= today) nextForBin[bin] = d;
       }
-      if (nextForBin.black && nextForBin.blue && nextForBin.green) break;
+      if (nextForBin.black && nextForBin.blue && nextForBin.green && nextForBin.food) break;
     }
 
     const nextUpEl = document.getElementById('next-up-cards');
     nextUpEl.innerHTML = '';
-    ['black','blue','green'].forEach(bin => {
+    ['black','blue','green','food'].forEach(bin => {
       const d = nextForBin[bin];
       const meta = BIN_META[bin];
       const card = document.createElement('div');
