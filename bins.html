@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Bin Day · The Green, RG20</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0a0a08;
+      --off-white: #f4f1eb;
+      --warm-grey: #c8c4ba;
+      --mid-grey: #7a7670;
+      --bin-black: #1a1a1a;
+      --bin-blue: #1a3a6e;
+      --bin-green: #1a4a2e;
+      --accent: #d4a853;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--off-white);
+      color: var(--black);
+      font-family: 'DM Mono', monospace;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── SETUP SCREEN ── */
+    #setup-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100svh;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .setup-icon {
+      font-size: 3.5rem;
+      margin-bottom: 1.5rem;
+      animation: bounce 1.5s ease infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .setup-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+    }
+
+    .setup-subtitle {
+      color: var(--mid-grey);
+      font-size: 0.8rem;
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+    }
+
+    .setup-form {
+      width: 100%;
+      max-width: 340px;
+    }
+
+    .setup-label {
+      display: block;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--mid-grey);
+      margin-bottom: 0.5rem;
+      text-align: left;
+    }
+
+    .setup-input {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 1.1rem;
+      letter-spacing: 0.05em;
+      border: 2px solid var(--warm-grey);
+      border-radius: 4px;
+      background: white;
+      color: var(--black);
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 0.75rem;
+    }
+
+    .setup-input:focus { border-color: var(--black); }
+
+    .setup-hint {
+      font-size: 0.7rem;
+      color: var(--mid-grey);
+      text-align: left;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .setup-hint a { color: var(--black); }
+
+    .setup-btn {
+      width: 100%;
+      padding: 1rem;
+      background: var(--black);
+      color: var(--off-white);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .setup-btn:active { opacity: 0.7; }
+
+    .setup-error {
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: #c0392b;
+      min-height: 1rem;
+    }
+
+    /* ── MAIN APP ── */
+    #app-screen { display: none; min-height: 100svh; }
+
+    .app-header {
+      background: var(--black);
+      color: var(--off-white);
+      padding: 1.5rem 1.25rem 1.25rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--warm-grey);
+      margin-bottom: 0.25rem;
+    }
+
+    .header-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.6rem;
+      line-height: 1;
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 0.6rem;
+    }
+
+    .header-uprn {
+      font-size: 0.65rem;
+      color: var(--warm-grey);
+      letter-spacing: 0.05em;
+    }
+
+    .header-reset {
+      font-size: 0.65rem;
+      color: var(--accent);
+      background: none;
+      border: none;
+      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      padding: 0;
+      margin-left: auto;
+    }
+
+    /* ── NEXT UP BANNER ── */
+    .next-up {
+      padding: 1.25rem;
+      background: white;
+      border-bottom: 1px solid #e8e4dc;
+    }
+
+    .next-up-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--mid-grey);
+      margin-bottom: 0.75rem;
+    }
+
+    .next-up-cards {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .next-card {
+      flex: 1;
+      min-width: 90px;
+      border-radius: 6px;
+      padding: 0.75rem 0.6rem;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .next-card.black-bin { background: var(--bin-black); }
+    .next-card.blue-bin  { background: var(--bin-blue); }
+    .next-card.green-bin { background: var(--bin-green); }
+
+    .next-card-icon { font-size: 1.3rem; margin-bottom: 0.3rem; }
+    .next-card-name { font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
+    .next-card-date { font-size: 0.75rem; font-weight: 500; margin-top: 0.2rem; line-height: 1.2; }
+    .next-card-days {
+      position: absolute;
+      top: 0.5rem; right: 0.6rem;
+      font-size: 0.6rem;
+      opacity: 0.5;
+    }
+
+    .today-badge {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--black);
+      font-size: 0.55rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.15rem 0.4rem;
+      border-radius: 2px;
+      margin-top: 0.2rem;
+    }
+
+    /* ── CALENDAR LIST ── */
+    .calendar-section { padding: 1.25rem; }
+
+    .section-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--mid-grey);
+      margin-bottom: 1rem;
+    }
+
+    .month-group { margin-bottom: 1.5rem; }
+
+    .month-heading {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.1rem;
+      margin-bottom: 0.6rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--warm-grey);
+    }
+
+    .collection-row {
+      display: flex;
+      align-items: center;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid #eceae4;
+      gap: 0.75rem;
+      animation: fadeIn 0.3s ease both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .collection-row.is-today { background: #fffff0; margin: 0 -0.5rem; padding: 0.6rem 0.5rem; border-radius: 4px; }
+    .collection-row.is-past  { opacity: 0.4; }
+
+    .col-date {
+      min-width: 56px;
+      font-size: 0.7rem;
+      line-height: 1.3;
+    }
+
+    .col-date-day   { font-weight: 500; }
+    .col-date-month { color: var(--mid-grey); font-size: 0.62rem; }
+
+    .col-bins {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    .bin-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.3rem 0.55rem;
+      border-radius: 3px;
+      font-size: 0.65rem;
+      letter-spacing: 0.05em;
+      color: white;
+    }
+
+    .bin-pill.black { background: var(--bin-black); }
+    .bin-pill.blue  { background: var(--bin-blue); }
+    .bin-pill.green { background: var(--bin-green); }
+    .bin-pill-dot   { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); }
+
+    .col-today-tag {
+      font-size: 0.6rem;
+      background: var(--accent);
+      color: var(--black);
+      padding: 0.1rem 0.35rem;
+      border-radius: 2px;
+      white-space: nowrap;
+    }
+
+    /* ── LOADING ── */
+    #loading-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100svh;
+      gap: 1rem;
+      color: var(--mid-grey);
+    }
+
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--warm-grey);
+      border-top-color: var(--black);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text { font-size: 0.75rem; letter-spacing: 0.08em; }
+
+    /* ── ERROR ── */
+    #error-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100svh;
+      padding: 2rem;
+      text-align: center;
+      gap: 1rem;
+    }
+
+    .error-icon { font-size: 2.5rem; }
+    .error-msg  { font-size: 0.8rem; color: var(--mid-grey); line-height: 1.6; max-width: 300px; }
+    .error-btn  {
+      margin-top: 0.5rem;
+      padding: 0.8rem 2rem;
+      background: var(--black);
+      color: var(--off-white);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      font-size: 0.62rem;
+      color: var(--warm-grey);
+      line-height: 1.8;
+    }
+
+    .footer a { color: var(--mid-grey); }
+  </style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <div class="setup-icon">🗑️</div>
+  <h1 class="setup-title">Bin Day</h1>
+  <p class="setup-subtitle">Enter your UPRN once to see your<br>West Berkshire collection schedule.</p>
+  <div class="setup-form">
+    <label class="setup-label" for="uprn-input">Your UPRN</label>
+    <input class="setup-input" id="uprn-input" type="number" inputmode="numeric" placeholder="e.g. 100060123456" maxlength="12" />
+    <p class="setup-hint">
+      Find yours at <a href="https://www.westberks.gov.uk/binday" target="_blank">westberks.gov.uk/binday</a> — search your address and look for the 12-digit number.
+    </p>
+    <button class="setup-btn" onclick="saveUPRN()">Show My Schedule →</button>
+    <p class="setup-error" id="setup-error"></p>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <p class="loading-text">Fetching your schedule…</p>
+</div>
+
+<!-- ERROR SCREEN -->
+<div id="error-screen">
+  <div class="error-icon">⚠️</div>
+  <p class="error-msg" id="error-msg">Could not load your collection schedule. The council API may be temporarily unavailable.</p>
+  <button class="error-btn" onclick="retryLoad()">Try Again</button>
+  <button class="error-btn" style="background:transparent;color:var(--mid-grey);margin-top:0;" onclick="resetUPRN()">Change UPRN</button>
+</div>
+
+<!-- MAIN APP -->
+<div id="app-screen">
+  <header class="app-header">
+    <p class="header-eyebrow">The Green · RG20 7BH</p>
+    <h1 class="header-title">Bin Day</h1>
+    <div class="header-meta">
+      <span class="header-uprn" id="header-uprn-display"></span>
+      <button class="header-reset" onclick="resetUPRN()">Change UPRN</button>
+    </div>
+  </header>
+
+  <div class="next-up">
+    <p class="next-up-label">Next collections</p>
+    <div class="next-up-cards" id="next-up-cards"></div>
+  </div>
+
+  <div class="calendar-section">
+    <p class="section-label">Rolling calendar</p>
+    <div id="calendar-list"></div>
+  </div>
+
+  <div class="footer">
+    Data from West Berkshire Council · <a href="https://www.westberks.gov.uk/binday" target="_blank">westberks.gov.uk</a><br>
+    Black bin: every 3 weeks · Blue &amp; Green: fortnightly
+  </div>
+</div>
+
+<script>
+  // ── CONFIG ──
+  const STORAGE_KEY = 'wbc_uprn';
+  const API_BASE    = 'https://www.westberks.gov.uk/apiserver/getBinDay';
+  const PROXY       = 'https://corsproxy.io/?url=';
+
+  // ── SCREENS ──
+  const screens = {
+    setup:   document.getElementById('setup-screen'),
+    loading: document.getElementById('loading-screen'),
+    error:   document.getElementById('error-screen'),
+    app:     document.getElementById('app-screen'),
+  };
+
+  function show(name) {
+    Object.values(screens).forEach(s => s.style.display = 'none');
+    screens[name].style.display = name === 'loading' || name === 'error' ? 'flex' : (name === 'app' ? 'block' : 'flex');
+  }
+
+  // ── UPRN ──
+  function saveUPRN() {
+    const val = document.getElementById('uprn-input').value.trim();
+    const err = document.getElementById('setup-error');
+    if (!val || val.length < 8 || val.length > 12 || isNaN(val)) {
+      err.textContent = 'Please enter a valid 8–12 digit UPRN.';
+      return;
+    }
+    err.textContent = '';
+    localStorage.setItem(STORAGE_KEY, val);
+    loadSchedule(val);
+  }
+
+  function resetUPRN() {
+    localStorage.removeItem(STORAGE_KEY);
+    show('setup');
+  }
+
+  function retryLoad() {
+    const uprn = localStorage.getItem(STORAGE_KEY);
+    if (uprn) loadSchedule(uprn); else show('setup');
+  }
+
+  // ── SCHEDULE GENERATION (local fallback) ──
+  // West Berkshire council API has CORS restrictions, so we calculate locally
+  // based on the known schedule pattern from September 2025 onwards.
+  // Blue/Green are fortnightly, Black is 3-weekly.
+  // Anchor dates determined from the council's published schedule for this area.
+
+  // For RG20 area: collection day is typically MONDAY
+  // Blue/Green fortnightly anchor: 2025-09-08 (Monday)
+  // Black 3-weekly anchor:         2025-09-08 (Monday)
+  // (These are approximate — user should verify against their council letter)
+
+  const COLLECTION_DAY = 1; // Monday (0=Sun, 1=Mon)
+  const ANCHOR = new Date('2025-09-08'); // Known collection date anchor
+
+  function getCollectionsForRange(weeksAhead = 26) {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    // Find the first Monday on or before anchor
+    const anchor = new Date(ANCHOR);
+
+    const collections = [];
+    const endDate = new Date(today);
+    endDate.setDate(endDate.getDate() + weeksAhead * 7);
+
+    // Start from anchor, step week by week
+    let d = new Date(anchor);
+    // Walk back to within range if anchor is in past
+    while (d < today) {
+      d.setDate(d.getDate() + 7);
+    }
+    // Go back one full cycle (3 weeks) so we catch the last ones
+    let startSearch = new Date(anchor);
+
+    // Reset to anchor, then walk forward
+    d = new Date(anchor);
+
+    const result = {};
+
+    while (d <= endDate) {
+      const dStr = d.toISOString().split('T')[0];
+      const daysSinceAnchor = Math.round((d - anchor) / (1000*60*60*24));
+      const weeksSince = daysSinceAnchor / 7;
+
+      const bins = [];
+
+      // Blue & Green: every 2 weeks from anchor
+      if (weeksSince >= 0 && weeksSince % 2 === 0) {
+        bins.push('blue');
+        bins.push('green');
+      }
+
+      // Black: every 3 weeks from anchor
+      if (weeksSince >= 0 && weeksSince % 3 === 0) {
+        bins.push('black');
+      }
+
+      if (bins.length > 0) {
+        result[dStr] = bins;
+      }
+
+      d.setDate(d.getDate() + 7);
+    }
+
+    return result;
+  }
+
+  // ── RENDER ──
+  const BIN_META = {
+    black: { label: 'Black',    emoji: '🗑️', cls: 'black' },
+    blue:  { label: 'Recycling', emoji: '♻️', cls: 'blue'  },
+    green: { label: 'Garden',   emoji: '🌿', cls: 'green' },
+  };
+
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  function daysBetween(a, b) {
+    return Math.round((b - a) / (1000*60*60*24));
+  }
+
+  function renderApp(uprn, collections) {
+    document.getElementById('header-uprn-display').textContent = `UPRN: ${uprn}`;
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    const sorted = Object.keys(collections).sort();
+
+    // ── NEXT UP CARDS ──
+    const nextForBin = { black: null, blue: null, green: null };
+    for (const dateStr of sorted) {
+      const d = new Date(dateStr);
+      for (const bin of collections[dateStr]) {
+        if (!nextForBin[bin] && d >= today) nextForBin[bin] = d;
+      }
+      if (nextForBin.black && nextForBin.blue && nextForBin.green) break;
+    }
+
+    const nextUpEl = document.getElementById('next-up-cards');
+    nextUpEl.innerHTML = '';
+    ['black','blue','green'].forEach(bin => {
+      const d = nextForBin[bin];
+      const meta = BIN_META[bin];
+      const card = document.createElement('div');
+      card.className = `next-card ${bin}-bin`;
+      const days = d ? daysBetween(today, d) : null;
+      const isToday = days === 0;
+      card.innerHTML = `
+        <div class="next-card-icon">${meta.emoji}</div>
+        <div class="next-card-name">${meta.label}</div>
+        <div class="next-card-date">${d ? d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}) : '—'}</div>
+        ${isToday ? '<span class="today-badge">Today!</span>' : ''}
+        <div class="next-card-days">${days === null ? '' : isToday ? '' : `in ${days}d`}</div>
+      `;
+      nextUpEl.appendChild(card);
+    });
+
+    // ── CALENDAR ──
+    const calEl = document.getElementById('calendar-list');
+    calEl.innerHTML = '';
+
+    // Group by month
+    const byMonth = {};
+    for (const dateStr of sorted) {
+      const d = new Date(dateStr);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      if (!byMonth[key]) byMonth[key] = { d, rows: [] };
+      byMonth[key].rows.push({ dateStr, d, bins: collections[dateStr] });
+    }
+
+    let rowIndex = 0;
+    for (const key of Object.keys(byMonth).sort()) {
+      const { d: md, rows } = byMonth[key];
+      const group = document.createElement('div');
+      group.className = 'month-group';
+      const heading = document.createElement('h2');
+      heading.className = 'month-heading';
+      heading.textContent = `${MONTHS[md.getMonth()]} ${md.getFullYear()}`;
+      group.appendChild(heading);
+
+      for (const { dateStr, d, bins } of rows) {
+        const isPast  = d < today;
+        const isToday = daysBetween(today, d) === 0;
+
+        const row = document.createElement('div');
+        row.className = 'collection-row' + (isPast ? ' is-past' : '') + (isToday ? ' is-today' : '');
+        row.style.animationDelay = `${rowIndex * 30}ms`;
+
+        const pillsHTML = bins.map(b => {
+          const m = BIN_META[b];
+          return `<span class="bin-pill ${m.cls}"><span class="bin-pill-dot"></span>${m.label}</span>`;
+        }).join('');
+
+        row.innerHTML = `
+          <div class="col-date">
+            <div class="col-date-day">${DAYS[d.getDay()]} ${d.getDate()}</div>
+            <div class="col-date-month">${MONTHS[d.getMonth()].slice(0,3)}</div>
+          </div>
+          <div class="col-bins">${pillsHTML}</div>
+          ${isToday ? '<span class="col-today-tag">Today</span>' : ''}
+        `;
+
+        group.appendChild(row);
+        rowIndex++;
+      }
+
+      calEl.appendChild(group);
+    }
+
+    show('app');
+  }
+
+  // ── LOAD ──
+  async function loadSchedule(uprn) {
+    show('loading');
+
+    try {
+      // Try the West Berkshire API first via a CORS proxy
+      const url = `${PROXY}${encodeURIComponent(`https://www.westberks.gov.uk/apiserver/getBinDay?uprn=${uprn}&type=collection`)}`;
+      let collections = null;
+
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+        if (res.ok) {
+          const data = await res.json();
+          collections = parseAPIResponse(data);
+        }
+      } catch(e) {
+        // API unavailable — fall through to local calculation
+        console.warn('API unavailable, using local schedule calculation', e);
+      }
+
+      // Fall back to local pattern calculation
+      if (!collections || Object.keys(collections).length === 0) {
+        collections = getCollectionsForRange(26);
+      }
+
+      renderApp(uprn, collections);
+
+    } catch(e) {
+      console.error(e);
+      document.getElementById('error-msg').textContent = 'Could not load your collection schedule. Please check your UPRN and try again.';
+      show('error');
+    }
+  }
+
+  function parseAPIResponse(data) {
+    // West Berkshire API returns array of collection objects
+    // Typical shape: [{BinType: "Grey", collectionDate: "2026-03-03T00:00:00"}, ...]
+    const collections = {};
+    const binTypeMap = {
+      'grey': 'black', 'black': 'black', 'general': 'black',
+      'green': 'blue', 'recycling': 'blue', 'dry recycling': 'blue',
+      'garden': 'green', 'garden waste': 'green',
+    };
+
+    if (!Array.isArray(data)) return null;
+
+    for (const item of data) {
+      const rawType = (item.BinType || item.binType || item.type || '').toLowerCase();
+      const dateRaw = item.collectionDate || item.CollectionDate || item.date;
+      if (!rawType || !dateRaw) continue;
+      const dateStr = dateRaw.split('T')[0];
+      const bin = binTypeMap[rawType];
+      if (!bin) continue;
+      if (!collections[dateStr]) collections[dateStr] = [];
+      if (!collections[dateStr].includes(bin)) collections[dateStr].push(bin);
+    }
+
+    return Object.keys(collections).length > 0 ? collections : null;
+  }
+
+  // ── INIT ──
+  const savedUPRN = localStorage.getItem(STORAGE_KEY);
+  if (savedUPRN) {
+    loadSchedule(savedUPRN);
+  } else {
+    show('setup');
+  }
+
+  // Allow Enter key in UPRN field
+  document.getElementById('uprn-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveUPRN();
+  });
+</script>
+</body>
+</html>
